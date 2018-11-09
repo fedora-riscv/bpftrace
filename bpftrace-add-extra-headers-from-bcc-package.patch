@@ -1,0 +1,406 @@
+From b41d42307ef9af6c0b338de3bb59238dc2ae2a1b Mon Sep 17 00:00:00 2001
+From: Augusto Caringi <acaringi@redhat.com>
+Date: Wed, 7 Nov 2018 20:34:38 +0100
+Subject: [PATCH] Add extra headers from bcc package
+
+---
+ CMakeLists.txt                                |   1 +
+ extra_headers/common.h                        |  38 +++++
+ extra_headers/frontends/clang/kbuild_helper.h | 104 ++++++++++++
+ extra_headers/ns_guard.h                      |  59 +++++++
+ extra_headers/syms.h                          | 149 ++++++++++++++++++
+ 5 files changed, 351 insertions(+)
+ create mode 100644 extra_headers/common.h
+ create mode 100644 extra_headers/frontends/clang/kbuild_helper.h
+ create mode 100644 extra_headers/ns_guard.h
+ create mode 100644 extra_headers/syms.h
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3b01a21..2d004c6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -29,6 +29,7 @@ endif()
+ if (SYSTEM_BCC_LIBRARY)
+   find_package(LibBcc REQUIRED)
+   include_directories(${LIBBCC_INCLUDE_DIRS})
++  include_directories(extra_headers)
+ else()
+   if (OFFLINE_BUILDS)
+     include(ExternalProject)
+diff --git a/extra_headers/common.h b/extra_headers/common.h
+new file mode 100644
+index 0000000..c227474
+--- /dev/null
++++ b/extra_headers/common.h
+@@ -0,0 +1,38 @@
++/*
++ * Copyright (c) 2015 PLUMgrid, Inc.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#pragma once
++
++#include <memory>
++#include <string>
++#include <unistd.h>
++#include <vector>
++
++namespace ebpf {
++
++template <class T, class... Args>
++typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type
++make_unique(Args &&... args) {
++  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
++}
++
++std::vector<int> get_online_cpus();
++
++std::vector<int> get_possible_cpus();
++
++std::string get_pid_exe(pid_t pid);
++
++}  // namespace ebpf
+diff --git a/extra_headers/frontends/clang/kbuild_helper.h b/extra_headers/frontends/clang/kbuild_helper.h
+new file mode 100644
+index 0000000..5a271ff
+--- /dev/null
++++ b/extra_headers/frontends/clang/kbuild_helper.h
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (c) 2015 PLUMgrid, Inc.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#include <cstring>
++#include <memory>
++#include <string>
++#include <vector>
++#include <unistd.h>
++#include <errno.h>
++#include <ftw.h>
++
++namespace ebpf {
++
++struct FileDeleter {
++  void operator() (FILE *fp) {
++    fclose(fp);
++  }
++};
++typedef std::unique_ptr<FILE, FileDeleter> FILEPtr;
++
++// Helper with pushd/popd semantics
++class DirStack {
++ public:
++  explicit DirStack(const std::string &dst) : ok_(false) {
++    if (getcwd(cwd_, sizeof(cwd_)) == NULL) {
++      ::perror("getcwd");
++      return;
++    }
++    if (::chdir(dst.c_str())) {
++      fprintf(stderr, "chdir(%s): %s\n", dst.c_str(), strerror(errno));
++      return;
++    }
++    ok_ = true;
++  }
++  ~DirStack() {
++    if (!ok_) return;
++    if (::chdir(cwd_)) {
++      fprintf(stderr, "chdir(%s): %s\n", cwd_, strerror(errno));
++    }
++  }
++  bool ok() const { return ok_; }
++  const char * cwd() const { return cwd_; }
++ private:
++  bool ok_;
++  char cwd_[256];
++};
++
++static int ftw_cb(const char *path, const struct stat *, int, struct FTW *) {
++  return ::remove(path);
++}
++
++// Scoped class to manage the creation/deletion of tmpdirs
++class TmpDir {
++ public:
++  explicit TmpDir(const std::string &prefix = "/tmp/bcc-")
++      : ok_(false), prefix_(prefix) {
++    prefix_ += "XXXXXX";
++    if (::mkdtemp((char *)prefix_.data()) == NULL)
++      ::perror("mkdtemp");
++    else
++      ok_ = true;
++  }
++  ~TmpDir() {
++    if (::nftw(prefix_.c_str(), ftw_cb, 20, FTW_DEPTH) < 0)
++      ::perror("ftw");
++    else
++      ::remove(prefix_.c_str());
++  }
++  bool ok() const { return ok_; }
++  const std::string & str() const { return prefix_; }
++ private:
++  bool ok_;
++  std::string prefix_;
++};
++
++// Compute the kbuild flags for the currently running kernel
++// Do this by:
++//   1. Create temp Makefile with stub dummy.c
++//   2. Run module build on that makefile, saving the computed flags to a file
++//   3. Cache the file for fast flag lookup in subsequent runs
++//  Note: Depending on environment, different cache locations may be desired. In
++//  case we eventually support non-root user programs, cache in $HOME.
++class KBuildHelper {
++ public:
++  explicit KBuildHelper(const std::string &kdir, bool has_source_dir);
++  int get_flags(const char *uname_machine, std::vector<std::string> *cflags);
++ private:
++  std::string kdir_;
++  bool has_source_dir_;
++};
++
++}  // namespace ebpf
+diff --git a/extra_headers/ns_guard.h b/extra_headers/ns_guard.h
+new file mode 100644
+index 0000000..ce4b61b
+--- /dev/null
++++ b/extra_headers/ns_guard.h
+@@ -0,0 +1,59 @@
++/*
++ * Copyright (c) 2017 Facebook, Inc.
++ * Copyright (c) 2017 VMware, Inc.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#pragma once
++
++#include <memory>
++#include <sys/types.h>
++
++#include "file_desc.h"
++
++class ProcMountNSGuard;
++
++// ProcMountNS opens an fd corresponding to the current mount namespace and the
++// mount namespace of the target process.
++// The fds will remain uninitialized (<0) if the open fails, or if the current
++// and target namespaces are identical.
++class ProcMountNS {
++ public:
++  explicit ProcMountNS(int pid);
++  int self() const { return self_fd_; }
++  int target() const { return target_fd_; }
++  ino_t target_ino() const { return target_ino_; }
++
++ private:
++  ebpf::FileDesc self_fd_;
++  ebpf::FileDesc target_fd_;
++  ino_t target_ino_;
++};
++
++// ProcMountNSGuard switches to the target mount namespace and restores the
++// original upon going out of scope.
++class ProcMountNSGuard {
++ public:
++  explicit ProcMountNSGuard(ProcMountNS *mount_ns);
++  explicit ProcMountNSGuard(int pid);
++
++  ~ProcMountNSGuard();
++
++ private:
++  void init();
++
++  std::unique_ptr<ProcMountNS> mount_ns_instance_;
++  ProcMountNS *mount_ns_;
++  bool entered_;
++};
+diff --git a/extra_headers/syms.h b/extra_headers/syms.h
+new file mode 100644
+index 0000000..d7dabfa
+--- /dev/null
++++ b/extra_headers/syms.h
+@@ -0,0 +1,149 @@
++/*
++ * Copyright (c) 2016 GitHub, Inc.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ * http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#pragma once
++
++#include <algorithm>
++#include <memory>
++#include <string>
++#include <sys/types.h>
++#include <unordered_map>
++#include <unordered_set>
++#include <vector>
++
++#include "bcc_syms.h"
++#include "file_desc.h"
++#include "ns_guard.h"
++
++class ProcStat {
++  std::string procfs_;
++  ino_t inode_;
++  ino_t getinode_();
++
++public:
++  ProcStat(int pid);
++  bool is_stale();
++  void reset() { inode_ = getinode_(); }
++};
++
++class SymbolCache {
++public:
++  virtual ~SymbolCache() = default;
++
++  virtual void refresh() = 0;
++  virtual bool resolve_addr(uint64_t addr, struct bcc_symbol *sym, bool demangle = true) = 0;
++  virtual bool resolve_name(const char *module, const char *name,
++                            uint64_t *addr) = 0;
++};
++
++class KSyms : SymbolCache {
++  struct Symbol {
++    Symbol(const char *name, uint64_t addr) : name(name), addr(addr) {}
++    std::string name;
++    uint64_t addr;
++
++    bool operator<(const Symbol &rhs) const { return addr < rhs.addr; }
++  };
++
++  std::vector<Symbol> syms_;
++  std::unordered_map<std::string, uint64_t> symnames_;
++  static void _add_symbol(const char *, uint64_t, void *);
++
++public:
++  virtual bool resolve_addr(uint64_t addr, struct bcc_symbol *sym, bool demangle = true);
++  virtual bool resolve_name(const char *unused, const char *name,
++                            uint64_t *addr);
++  virtual void refresh();
++};
++
++class ProcSyms : SymbolCache {
++  struct Symbol {
++    Symbol(const std::string *name, uint64_t start, uint64_t size)
++        : name(name), start(start), size(size) {}
++    const std::string *name;
++    uint64_t start;
++    uint64_t size;
++
++    bool operator<(const struct Symbol& rhs) const {
++      return start < rhs.start;
++    }
++  };
++
++  enum class ModuleType {
++    UNKNOWN,
++    EXEC,
++    SO,
++    PERF_MAP,
++    VDSO
++  };
++
++  struct Module {
++    struct Range {
++      uint64_t start;
++      uint64_t end;
++      uint64_t file_offset;
++      Range(uint64_t s, uint64_t e, uint64_t f)
++          : start(s), end(e), file_offset(f) {}
++    };
++
++    Module(const char *name, ProcMountNS *mount_ns,
++           struct bcc_symbol_option *option);
++
++    std::string name_;
++    std::vector<Range> ranges_;
++    bool loaded_;
++    ProcMountNS *mount_ns_;
++    bcc_symbol_option *symbol_option_;
++    ModuleType type_;
++
++    // The file offset within the ELF of the SO's first text section.
++    uint64_t elf_so_offset_;
++    uint64_t elf_so_addr_;
++
++    std::unordered_set<std::string> symnames_;
++    std::vector<Symbol> syms_;
++
++    void load_sym_table();
++
++    bool contains(uint64_t addr, uint64_t &offset) const;
++    uint64_t start() const { return ranges_.begin()->start; }
++
++    bool find_addr(uint64_t offset, struct bcc_symbol *sym);
++    bool find_name(const char *symname, uint64_t *addr);
++
++    static int _add_symbol(const char *symname, uint64_t start, uint64_t size,
++                           void *p);
++  };
++
++  int pid_;
++  std::vector<Module> modules_;
++  ProcStat procstat_;
++  std::unique_ptr<ProcMountNS> mount_ns_instance_;
++  bcc_symbol_option symbol_option_;
++
++  static int _add_load_sections(uint64_t v_addr, uint64_t mem_sz,
++                                uint64_t file_offset, void *payload);
++  static int _add_module(const char *, uint64_t, uint64_t, uint64_t, bool,
++                         void *);
++  void load_exe();
++  void load_modules();
++
++public:
++  ProcSyms(int pid, struct bcc_symbol_option *option = nullptr);
++  virtual void refresh();
++  virtual bool resolve_addr(uint64_t addr, struct bcc_symbol *sym, bool demangle = true);
++  virtual bool resolve_name(const char *module, const char *name,
++                            uint64_t *addr);
++};
+-- 
+2.17.2
+
