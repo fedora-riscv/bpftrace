@@ -1,9 +1,9 @@
-%global commit_bpftrace 029717bfd62265659993d5fc8e6847828b827fcb
+%global commit_bpftrace c49b333c034a6d29a7ce90f565e27da1061af971
 %global shortcommit_bpftrace %(c=%{commit_bpftrace}; echo ${c:0:7})
 
 Name:           bpftrace
 Version:        0.0
-Release:        1.20181107git%{shortcommit_bpftrace}%{?dist}
+Release:        1.20181210git%{shortcommit_bpftrace}%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -14,6 +14,8 @@ Source0:        %{url}/archive/%{commit_bpftrace}.tar.gz
 Patch0:         %{name}-add-support-to-link-bpftrace-against-the-system-inst.patch
 # https://github.com/iovisor/bcc/pull/2022
 Patch1:         %{name}-add-extra-headers-from-bcc-package.patch
+# https://github.com/iovisor/bpftrace/pull/264
+Patch2:         %{name}-install-_example.txt-files-to-tools-doc-they-are-ref.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -71,11 +73,16 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 %license LICENSE
 %dir %{_datadir}/%{name}
 %dir %{_datadir}/%{name}/tools
+%dir %{_datadir}/%{name}/tools/doc
 %{_bindir}/%{name}
 %{_mandir}/man8/*
-%attr(0755,-,-) %{_datadir}/%{name}/tools/*
+%attr(0755,-,-) %{_datadir}/%{name}/tools/*.bt
+%{_datadir}/%{name}/tools/doc/*.txt
 
 
 %changelog
+* Mon Dec 10 2018 Augusto Caringi <acaringi@redhat.com> - 0.0-1.20181210gitc49b333
+- Updated to latest upstream (c49b333c034a6d29a7ce90f565e27da1061af971)
+
 * Wed Nov 07 2018 Augusto Caringi <acaringi@redhat.com> - 0.0-1.20181107git029717b
 - Initial import
