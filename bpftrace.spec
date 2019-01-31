@@ -3,7 +3,7 @@
 
 Name:           bpftrace
 Version:        0.0
-Release:        1.20181210git%{shortcommit_bpftrace}%{?dist}
+Release:        2.20181210git%{shortcommit_bpftrace}%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -81,6 +81,9 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Thu Jan 31 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.0-2.20181210gitc49b333
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
 * Mon Dec 10 2018 Augusto Caringi <acaringi@redhat.com> - 0.0-1.20181210gitc49b333
 - Updated to latest upstream (c49b333c034a6d29a7ce90f565e27da1061af971)
 
