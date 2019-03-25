@@ -1,21 +1,11 @@
-%global commit_bpftrace c49b333c034a6d29a7ce90f565e27da1061af971
-%global shortcommit_bpftrace %(c=%{commit_bpftrace}; echo ${c:0:7})
-
 Name:           bpftrace
-Version:        0.0
-Release:        1.20181210git%{shortcommit_bpftrace}%{?dist}
+Version:        0.9
+Release:        0%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
-Source0:        %{url}/archive/%{commit_bpftrace}.tar.gz
-
-# https://github.com/iovisor/bpftrace/pull/227
-Patch0:         %{name}-add-support-to-link-bpftrace-against-the-system-inst.patch
-# https://github.com/iovisor/bcc/pull/2022
-Patch1:         %{name}-add-extra-headers-from-bcc-package.patch
-# https://github.com/iovisor/bpftrace/pull/264
-Patch2:         %{name}-install-_example.txt-files-to-tools-doc-they-are-ref.patch
+Source0:        %{url}/archive/v%{version}.tar.gz
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -43,14 +33,13 @@ and predecessor tracers such as DTrace and SystemTap
 
 
 %prep
-%autosetup -p1 -n bpftrace-%{commit_bpftrace}
+%autosetup -p1
 
 
 %build
 %cmake . \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DSYSTEM_BCC_LIBRARY:BOOL=ON \
-        -DENABLE_TESTS:BOOL=OFF \
+        -DBUILD_TESTING:BOOL=OFF \
         -DBUILD_SHARED_LIBS:BOOL=OFF
 make %{?_smp_mflags}
 
@@ -81,6 +70,12 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Mon Mar 25 2019 Augusto Caringi <acaringi@redhat.com> - 0.9-0
+- Updated to version 0.9
+
+* Thu Jan 31 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.0-2.20181210gitc49b333
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
 * Mon Dec 10 2018 Augusto Caringi <acaringi@redhat.com> - 0.0-1.20181210gitc49b333
 - Updated to latest upstream (c49b333c034a6d29a7ce90f565e27da1061af971)
 
