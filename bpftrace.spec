@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.9
-Release:        0%{?dist}
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -9,7 +9,7 @@ Source0:        %{url}/archive/v%{version}.tar.gz
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
-ExclusiveArch:  x86_64 %{power64}
+ExclusiveArch:  x86_64 %{power64} aarch64 s390x
 
 BuildRequires:  gcc-c++
 BuildRequires:  bison
@@ -72,6 +72,9 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Mon Apr  1 2019 Peter Robinson <pbrobinson@fedoraproject.org> 0.9-1
+- Build on aarch64 and s390x
+
 * Mon Mar 25 2019 Augusto Caringi <acaringi@redhat.com> - 0.9-0
 - Updated to version 0.9
 
