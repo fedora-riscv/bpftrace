@@ -1,11 +1,11 @@
 Name:           bpftrace
 Version:        0.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
-Source0:        %{url}/archive/v%{version}.tar.gz
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -43,7 +43,7 @@ and predecessor tracers such as DTrace and SystemTap
         -DBUILD_TESTING:BOOL=OFF \
         -DBUILD_SHARED_LIBS:BOOL=OFF \
         -DLLVM_DIR=/usr/lib64/llvm7.0/lib/cmake/llvm/
-make %{?_smp_mflags}
+%make_build
 
 
 %install
@@ -72,6 +72,10 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Mon Apr 22 2019 Neal Gompa <ngompa@datto.com> - 0.9-2
+- Fix Source0 reference
+- Use make_build macro for calling make
+
 * Mon Apr  1 2019 Peter Robinson <pbrobinson@fedoraproject.org> 0.9-1
 - Build on aarch64 and s390x
 
