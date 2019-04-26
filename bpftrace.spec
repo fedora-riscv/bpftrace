@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.9
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -72,6 +72,9 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Thu Apr 25 2019 Augusto Caringi <acaringi@redhat.com> - 0.9-3
+- Rebuilt for bcc 0.9.0
+
 * Mon Apr 22 2019 Neal Gompa <ngompa@datto.com> - 0.9-2
 - Fix Source0 reference
 - Use make_build macro for calling make
