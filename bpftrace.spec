@@ -1,6 +1,6 @@
 Name:           bpftrace
-Version:        0.9
-Release:        3%{?dist}
+Version:        0.9.1
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -17,8 +17,7 @@ BuildRequires:  flex
 BuildRequires:  cmake
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  zlib-devel
-BuildRequires:  llvm7.0-devel
-BuildRequires:  llvm7.0-static
+BuildRequires:  llvm-devel
 BuildRequires:  clang-devel
 BuildRequires:  bcc-devel
 
@@ -41,8 +40,7 @@ and predecessor tracers such as DTrace and SystemTap
 %cmake . \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING:BOOL=OFF \
-        -DBUILD_SHARED_LIBS:BOOL=OFF \
-        -DLLVM_DIR=/usr/lib64/llvm7.0/lib/cmake/llvm/
+        -DBUILD_SHARED_LIBS:BOOL=OFF
 %make_build
 
 
@@ -72,6 +70,9 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Wed Jun 26 2019 Augusto Caringi <acaringi@redhat.com> - 0.9.1-1
+- Rebased to version 0.9.1
+
 * Thu Apr 25 2019 Augusto Caringi <acaringi@redhat.com> - 0.9-3
 - Rebuilt for bcc 0.9.0
 
