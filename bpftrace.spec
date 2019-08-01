@@ -1,5 +1,5 @@
 Name:           bpftrace
-Version:        0.9.1
+Version:        0.9.2
 Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
@@ -70,6 +70,9 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Thu Aug 01 2019 Augusto Caringi <acaringi@redhat.com> - 0.9.2-1
+- Rebased to version 0.9.2
+
 * Wed Jun 26 2019 Augusto Caringi <acaringi@redhat.com> - 0.9.1-1
 - Rebased to version 0.9.1
 
