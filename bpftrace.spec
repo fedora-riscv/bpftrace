@@ -1,10 +1,11 @@
 Name:           bpftrace
-Version:        0.9.3
-Release:        2%{?dist}
+Version:        0.9.4
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
+Patch0:         0001-Add-missing-string-include-to-btf.h.patch
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # Arches will be included as upstream support is added and dependencies are
@@ -74,6 +75,9 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Thu Feb 06 2020 Augusto Caringi <acaringi@redhat.com> - 0.9.4-1
+- Rebased to version 0.9.4
+
 * Tue Jan 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.3-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
 
