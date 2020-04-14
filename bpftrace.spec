@@ -1,16 +1,15 @@
 Name:           bpftrace
-Version:        0.9.4
+Version:        0.10.0
 Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
-Patch0:         0001-Add-missing-string-include-to-btf.h.patch
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
-ExclusiveArch:  x86_64 %{power64} aarch64 s390x
+ExclusiveArch:  x86_64 %{power64} aarch64
 
 BuildRequires:  gcc-c++
 BuildRequires:  bison
@@ -56,10 +55,6 @@ and predecessor tracers such as DTrace and SystemTap
 find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
   sed -i -e '1s=^#!/usr/bin/env %{name}\([0-9.]\+\)\?$=#!%{_bindir}/%{name}=' {} \;
 
-# Move man pages to the right location
-mkdir -p %{buildroot}%{_mandir}
-mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
-
 
 %files
 %doc README.md CONTRIBUTING-TOOLS.md
@@ -75,6 +70,10 @@ mv %{buildroot}%{_prefix}/man/* %{buildroot}%{_mandir}/
 
 
 %changelog
+* Tue Apr 14 2020 Augusto Caringi <acaringi@redhat.com> - 0.10.0-1
+- Rebased to version 0.10.0
+- Dropped support for s390x temporaly due to build error
+
 * Mon Feb 10 2020 Augusto Caringi <acaringi@redhat.com> - 0.9.4-1
 - Rebased to version 0.9.4
 
