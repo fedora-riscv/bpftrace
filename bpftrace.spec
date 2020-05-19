@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.10.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -70,6 +70,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Tue May 19 2020 Augusto Caringi <acaringi@redhat.com> - 0.10.0-2
+- Rebuilt for new bcc/libbpf versions
+
 * Tue Apr 14 2020 Augusto Caringi <acaringi@redhat.com> - 0.10.0-1
 - Rebased to version 0.10.0
 - Dropped support for s390x temporaly due to build error
