@@ -1,6 +1,6 @@
 Name:           bpftrace
-Version:        0.10.0
-Release:        2%{?dist}
+Version:        0.11.0
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -9,7 +9,7 @@ Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
-ExclusiveArch:  x86_64 %{power64} aarch64
+ExclusiveArch:  x86_64 %{power64} aarch64 s390x
 
 BuildRequires:  gcc-c++
 BuildRequires:  bison
@@ -70,6 +70,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Thu Jul 16 2020 Augusto Caringi <acaringi@redhat.com> - 0.11.0-1
+* Rebased to version 0.11.0
+
 * Tue May 19 2020 Augusto Caringi <acaringi@redhat.com> - 0.10.0-2
 - Rebuilt for new bcc/libbpf versions
 
