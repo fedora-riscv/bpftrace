@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.11.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -49,6 +49,12 @@ and predecessor tracers such as DTrace and SystemTap
 
 
 %install
+# The post hooks strip the binary which removes
+# the BEGIN_trigger and END_trigger functions
+# which are needed for the BEGIN and END probes
+%global __os_install_post %{nil}
+%global _find_debuginfo_opts -g
+
 %make_install
 
 # Fix shebangs (https://fedoraproject.org/wiki/Packaging:Guidelines#Shebang_lines)
@@ -70,6 +76,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Tue Aug 04 2020 Augusto Caringi <acaringi@redhat.com> - 0.11.0-2
+- Fix 'bpftrace symbols are stripped' #1865787
+
 * Thu Jul 16 2020 Augusto Caringi <acaringi@redhat.com> - 0.11.0-1
 * Rebased to version 0.11.0
 
