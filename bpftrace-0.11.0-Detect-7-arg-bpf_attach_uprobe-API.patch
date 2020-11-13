@@ -1,0 +1,150 @@
+From 62a2d7f199996ef8cb16e08854edb44445db8d67 Mon Sep 17 00:00:00 2001
+From: Daniel Xu <dxu@dxuuu.xyz>
+Date: Wed, 14 Oct 2020 17:09:46 -0700
+Subject: [PATCH 2/2] Detect 7 arg bpf_attach_uprobe() API
+
+The 7th arg allows us to specify the usdt semaphore location.
+---
+ cmake/FindLibBcc.cmake | 11 +++++++++++
+ src/CMakeLists.txt     |  3 +++
+ src/attached_probe.cpp | 42 ++++++++++++++++++++++++++++++++++--------
+ src/main.cpp           |  6 ++++++
+ tests/CMakeLists.txt   |  3 +++
+ 5 files changed, 57 insertions(+), 8 deletions(-)
+
+diff --git a/cmake/FindLibBcc.cmake b/cmake/FindLibBcc.cmake
+index ec21627..76ab3b3 100644
+--- a/cmake/FindLibBcc.cmake
++++ b/cmake/FindLibBcc.cmake
+@@ -7,6 +7,8 @@
+ #  LIBBCC_DEFINITIONS - Compiler switches required for using libbcc
+ #  LIBBCC_BPF_LIBRARY_STATIC - libbpf static library (for static compilation)
+ #  LIBBCC_LOADER_LIBRARY_STATIC - libbcc helper static library (for static compilation)
++#  LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE
++#  LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE
+ #
+ # Note that the shared libbcc binary has libbpf and bcc_loader already compiled in but
+ # the static doesn't. So when creating a static build those have to be included too.
+@@ -92,5 +94,14 @@ int main(void) {
+   return 0;
+ }
+ " LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE)
++
++CHECK_CXX_SOURCE_COMPILES("
++#include <bcc/libbpf.h>
++
++int main(void) {
++  bpf_attach_uprobe(0, BPF_PROBE_ENTRY, \"\", \"\", 0, 0, 0);
++  return 0;
++}
++" LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE)
+ SET(CMAKE_REQUIRED_LIBRARIES)
+ endif()
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 35d2400..b4eee17 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -82,6 +82,9 @@ endif(HAVE_BFD_DISASM)
+ if(LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE)
+   target_compile_definitions(bpftrace PRIVATE LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE)
+ endif(LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE)
++if(LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE)
++  target_compile_definitions(bpftrace PRIVATE LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE)
++endif(LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE)
+ 
+ if (ALLOW_UNSAFE_PROBE)
+   target_compile_definitions(bpftrace PRIVATE HAVE_UNSAFE_PROBE)
+diff --git a/src/attached_probe.cpp b/src/attached_probe.cpp
+index afad9ed..811226a 100644
+--- a/src/attached_probe.cpp
++++ b/src/attached_probe.cpp
+@@ -790,12 +790,23 @@ void AttachedProbe::attach_uprobe(bool safe_mode)
+ {
+   resolve_offset_uprobe(safe_mode);
+ 
+-  int perf_event_fd = bpf_attach_uprobe(progfd_,
+-                                        attachtype(probe_.type),
+-                                        eventname().c_str(),
+-                                        probe_.path.c_str(),
+-                                        offset_,
+-                                        probe_.pid);
++  int perf_event_fd =
++#ifdef LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE
++      bpf_attach_uprobe(progfd_,
++                        attachtype(probe_.type),
++                        eventname().c_str(),
++                        probe_.path.c_str(),
++                        offset_,
++                        probe_.pid,
++                        0);
++#else
++      bpf_attach_uprobe(progfd_,
++                        attachtype(probe_.type),
++                        eventname().c_str(),
++                        probe_.path.c_str(),
++                        offset_,
++                        probe_.pid);
++#endif // LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE
+ 
+   if (perf_event_fd < 0)
+     throw std::runtime_error("Error attaching probe: " + probe_.name);
+@@ -904,8 +915,23 @@ void AttachedProbe::attach_usdt(int pid)
+ 
+   offset_ = resolve_offset(probe_.path, probe_.attach_point, probe_.loc);
+ 
+-  int perf_event_fd = bpf_attach_uprobe(progfd_, attachtype(probe_.type),
+-      eventname().c_str(), probe_.path.c_str(), offset_, pid == 0 ? -1 : pid);
++  int perf_event_fd =
++#ifdef LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE
++      bpf_attach_uprobe(progfd_,
++                        attachtype(probe_.type),
++                        eventname().c_str(),
++                        probe_.path.c_str(),
++                        offset_,
++                        pid == 0 ? -1 : pid,
++                        0);
++#else
++      bpf_attach_uprobe(progfd_,
++                        attachtype(probe_.type),
++                        eventname().c_str(),
++                        probe_.path.c_str(),
++                        offset_,
++                        pid == 0 ? -1 : pid);
++#endif // LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE
+ 
+   if (perf_event_fd < 0)
+   {
+diff --git a/src/main.cpp b/src/main.cpp
+index 71a06c1..bf76da8 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -155,6 +155,12 @@ static int info()
+             << "yes" << std::endl;
+ #else
+             << "no" << std::endl;
++#endif
++  std::cerr << "  bcc bpf_attach_uprobe refcount: "
++#ifdef LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE
++            << "yes" << std::endl;
++#else
++            << "no" << std::endl;
+ #endif
+   std::cerr << "  libbpf: "
+ #ifdef HAVE_LIBBPF
+diff --git a/tests/CMakeLists.txt b/tests/CMakeLists.txt
+index ed0ccf8..d94868a 100644
+--- a/tests/CMakeLists.txt
++++ b/tests/CMakeLists.txt
+@@ -103,6 +103,9 @@ endif(HAVE_BFD_DISASM)
+ if(LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE)
+   target_compile_definitions(bpftrace_test PRIVATE LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE)
+ endif(LIBBCC_ATTACH_KPROBE_SIX_ARGS_SIGNATURE)
++if(LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE)
++  target_compile_definitions(bpftrace_test PRIVATE LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE)
++endif(LIBBCC_ATTACH_UPROBE_SEVEN_ARGS_SIGNATURE)
+ 
+ target_link_libraries(bpftrace_test arch ast parser resources)
+ 
+-- 
+2.25.4
+

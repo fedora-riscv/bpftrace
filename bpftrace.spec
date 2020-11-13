@@ -1,11 +1,14 @@
 Name:           bpftrace
 Version:        0.11.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Patch0:         %{name}-%{version}-irbuilderbpf.cpp-bpforc.h-Fix-compilation-with-LLVM-.patch
+Patch1:         %{name}-%{version}-Feature-detect-bpf_attach_kprobe-signature.patch
+Patch2:         %{name}-%{version}-Detect-7-arg-bpf_attach_uprobe-API.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -76,6 +79,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Fri Nov 13 2020 Jerome Marchand <jmarchan@redhat.com> - 0.11.0-5
+- Rebuilt for LLVM 11
+
 * Tue Aug 04 2020 Augusto Caringi <acaringi@redhat.com> - 0.11.0-4
 - Fix FTBFS due to cmake wide changes #1863295
 - Fix 'bpftrace symbols are stripped' #1865787
