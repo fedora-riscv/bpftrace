@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.11.0
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -9,6 +9,7 @@ Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Patch0:         %{name}-%{version}-irbuilderbpf.cpp-bpforc.h-Fix-compilation-with-LLVM-.patch
 Patch1:         %{name}-%{version}-Feature-detect-bpf_attach_kprobe-signature.patch
 Patch2:         %{name}-%{version}-Detect-7-arg-bpf_attach_uprobe-API.patch
+Patch3:         %{name}-gcc11.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -79,6 +80,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Fri Dec 04 2020 Jeff Law <law@redhat.com> - 0.11.0-6
+- Fix missing #include for gcc-11
+
 * Fri Nov 13 2020 Jerome Marchand <jmarchan@redhat.com> - 0.11.0-5
 - Rebuilt for LLVM 11
 
