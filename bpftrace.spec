@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.11.0
-Release:        6%{?dist}
+Release:        7%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -80,6 +80,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Fri Jan 22 2021 Tom Stellard <tstellar@redhat.com> - 0.11.0-7
+- Rebuild for clang-11.1.0
+
 * Fri Dec 04 2020 Jeff Law <law@redhat.com> - 0.11.0-6
 - Fix missing #include for gcc-11
 
