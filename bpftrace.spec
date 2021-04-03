@@ -1,14 +1,11 @@
 Name:           bpftrace
-Version:        0.11.0
-Release:        8%{?dist}
+Version:        0.11.4
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
-Patch0:         %{name}-%{version}-irbuilderbpf.cpp-bpforc.h-Fix-compilation-with-LLVM-.patch
-Patch1:         %{name}-%{version}-Feature-detect-bpf_attach_kprobe-signature.patch
-Patch2:         %{name}-%{version}-Detect-7-arg-bpf_attach_uprobe-API.patch
 Patch3:         %{name}-gcc11.patch
 
 # Arches will be included as upstream support is added and dependencies are
@@ -21,9 +18,9 @@ BuildRequires:  flex
 BuildRequires:  cmake
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  zlib-devel
-BuildRequires:  llvm-devel
-BuildRequires:  clang-devel
-BuildRequires:  bcc-devel >= 0.11.0-2
+BuildRequires:  llvm11-devel
+BuildRequires:  clang11-devel
+BuildRequires:  bcc-devel >= 0.19.0-1
 BuildRequires:  libbpf-devel
 BuildRequires:  libbpf-static
 BuildRequires:  binutils-devel
@@ -48,7 +45,8 @@ and predecessor tracers such as DTrace and SystemTap
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING:BOOL=OFF \
         -DBUILD_SHARED_LIBS:BOOL=OFF \
-        -DLIBBCC_LIBRARIES:PATH=/usr/lib64/libbcc-no-libbpf.so
+        -DLLVM_DIR=%{_libdir}/llvm11/lib/cmake/llvm \
+        -DClang_DIR=%{_libdir}/llvm11/lib/cmake/clang
 %cmake_build
 
 
@@ -80,6 +78,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Thu Apr 01 2021 Augusto Caringi <acaringi@redhat.com> - 0.11.4-1
+- Rebased to version 0.11.4
+
 * Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.11.0-8
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
 
