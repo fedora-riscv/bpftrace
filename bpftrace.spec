@@ -1,15 +1,12 @@
 Name:           bpftrace
-Version:        0.11.0
-Release:        10%{?dist}
+Version:        0.12.1
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
-Patch0:         %{name}-%{version}-irbuilderbpf.cpp-bpforc.h-Fix-compilation-with-LLVM-.patch
-Patch1:         %{name}-%{version}-Feature-detect-bpf_attach_kprobe-signature.patch
-Patch2:         %{name}-%{version}-Detect-7-arg-bpf_attach_uprobe-API.patch
-Patch3:         %{name}-gcc11.patch
+Patch0:         %{name}-gcc11.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -21,8 +18,8 @@ BuildRequires:  flex
 BuildRequires:  cmake
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  zlib-devel
-BuildRequires:  llvm11-devel
-BuildRequires:  clang11-devel
+BuildRequires:  llvm-devel
+BuildRequires:  clang-devel
 BuildRequires:  bcc-devel >= 0.11.0-2
 BuildRequires:  libbpf-devel
 BuildRequires:  libbpf-static
@@ -48,8 +45,6 @@ and predecessor tracers such as DTrace and SystemTap
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING:BOOL=OFF \
         -DBUILD_SHARED_LIBS:BOOL=OFF \
-        -DLLVM_DIR=%{_libdir}/llvm11/lib/cmake/llvm \
-        -DClang_DIR=%{_libdir}/llvm11/lib/cmake/clang \
         -DLIBBCC_LIBRARIES:PATH=/usr/lib64/libbcc-no-libbpf.so
 %cmake_build
 
@@ -82,6 +77,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Wed Jun 09 2021 Rafael Fonseca <r4f4rfs@gmail.com> - 0.12.1-1
+- Rebase to 0.12.1
+
 * Sat Jun 05 2021 Rafael Fonseca <r4f4rfs@gmail.com> - 0.11.0-10
 - Build against LLVM 11
 
