@@ -1,12 +1,11 @@
 Name:           bpftrace
-Version:        0.12.1
-Release:        3%{?dist}
+Version:        0.13.0
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
-Patch3:         %{name}-gcc11.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -76,6 +75,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Mon Aug 09 2021 Augusto Caringi <acaringi@redhat.com> - 0.13.0-1
+- Rebased to version 0.13.0
+
 * Tue Aug 03 2021 Rafael Santos <rdossant@redhat.com> - 0.12.1-3
 - Rebuilt for bcc-0.21.0
 
