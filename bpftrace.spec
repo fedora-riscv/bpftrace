@@ -1,5 +1,5 @@
 Name:           bpftrace
-Version:        0.13.0
+Version:        0.14.0
 Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
@@ -23,6 +23,9 @@ BuildRequires:  bcc-devel >= 0.19.0-1
 BuildRequires:  libbpf-devel
 BuildRequires:  libbpf-static
 BuildRequires:  binutils-devel
+BuildRequires:  cereal-devel
+BuildRequires:  libdwarf-devel
+BuildRequires:  rubygem-asciidoctor
 
 
 %description
@@ -69,12 +72,16 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 %dir %{_datadir}/%{name}/tools
 %dir %{_datadir}/%{name}/tools/doc
 %{_bindir}/%{name}
+%{_bindir}/%{name}-aotrt
 %{_mandir}/man8/*
 %attr(0755,-,-) %{_datadir}/%{name}/tools/*.bt
 %{_datadir}/%{name}/tools/doc/*.txt
 
 
 %changelog
+* Sun Oct 24 2021 Rafael Santos <rdossant@redhat.com> - 0.14.0-1
+- Rebased to version 0.14.0
+
 * Mon Aug 09 2021 Augusto Caringi <acaringi@redhat.com> - 0.13.0-1
 - Rebased to version 0.13.0
 
