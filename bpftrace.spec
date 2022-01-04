@@ -1,5 +1,5 @@
 Name:           bpftrace
-Version:        0.13.0
+Version:        0.13.1
 Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
@@ -17,8 +17,8 @@ BuildRequires:  flex
 BuildRequires:  cmake
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  zlib-devel
-BuildRequires:  llvm-devel
-BuildRequires:  clang-devel
+BuildRequires:  llvm12-devel
+BuildRequires:  clang12-devel
 BuildRequires:  bcc-devel >= 0.19.0-1
 BuildRequires:  libbpf-devel
 BuildRequires:  libbpf-static
@@ -43,7 +43,9 @@ and predecessor tracers such as DTrace and SystemTap
 %cmake . \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DBUILD_TESTING:BOOL=OFF \
-        -DBUILD_SHARED_LIBS:BOOL=OFF
+        -DBUILD_SHARED_LIBS:BOOL=OFF \
+        -DLLVM_DIR=%{_libdir}/llvm12/lib/cmake/llvm \
+        -DClang_DIR=%{_libdir}/llvm12/lib/cmake/clang
 %cmake_build
 
 
@@ -75,6 +77,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Tue Jan 04 2022 Viktor Malik <vmalik@redhat.com> - 0.13.1-1
+- Rebased to version 0.13.1
+
 * Mon Aug 09 2021 Augusto Caringi <acaringi@redhat.com> - 0.13.0-1
 - Rebased to version 0.13.0
 
