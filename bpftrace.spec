@@ -1,11 +1,14 @@
 Name:           bpftrace
-Version:        0.14.0
-Release:        2%{?dist}
+Version:        0.14.1
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Patch0:         Fix-libbtf-0.6.0-build.patch
+Patch1:         Fix-LLVM-13-warnings.patch
+Patch2:         Update-bio-tools-to-work-on-kernel-5.16.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -43,10 +46,9 @@ and predecessor tracers such as DTrace and SystemTap
 
 
 %build
-%cmake . \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-        -DBUILD_TESTING:BOOL=OFF \
-        -DBUILD_SHARED_LIBS:BOOL=OFF
+%cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+       -DBUILD_TESTING:BOOL=OFF \
+       -DBUILD_SHARED_LIBS:BOOL=OFF
 %cmake_build
 
 
@@ -79,6 +81,10 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Mon May 02 2022 Augusto Caringi <acaringi@redhat.com> - 0.14.1-1
+- Rebased to version 0.14.1
+- Fix cmake build
+
 * Wed Jan 19 2022 Fedora Release Engineering <releng@fedoraproject.org> - 0.14.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
 
