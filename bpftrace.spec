@@ -1,14 +1,11 @@
 Name:           bpftrace
-Version:        0.14.1
+Version:        0.16.0
 Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
-Patch0:         Fix-libbtf-0.6.0-build.patch
-Patch1:         Fix-LLVM-13-warnings.patch
-Patch2:         Update-bio-tools-to-work-on-kernel-5.16.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -73,14 +70,19 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 %dir %{_datadir}/%{name}
 %dir %{_datadir}/%{name}/tools
 %dir %{_datadir}/%{name}/tools/doc
+%dir %{_datadir}/%{name}/tools/old
 %{_bindir}/%{name}
 %{_bindir}/%{name}-aotrt
 %{_mandir}/man8/*
 %attr(0755,-,-) %{_datadir}/%{name}/tools/*.bt
+%attr(0755,-,-) %{_datadir}/%{name}/tools/old/*.bt
 %{_datadir}/%{name}/tools/doc/*.txt
 
 
 %changelog
+* Tue Sep 06 2022 Augusto Caringi <acaringi@redhat.com> - 0.16.0-1
+- Rebased to version 0.16.0
+
 * Mon May 02 2022 Augusto Caringi <acaringi@redhat.com> - 0.14.1-1
 - Rebased to version 0.14.1
 - Fix cmake build
