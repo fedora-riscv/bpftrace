@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.16.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
@@ -80,6 +80,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Mon Sep 19 2022 Pete Walter <pwalter@fedoraproject.org> - 0.16.0-2
+- Rebuild for llvm 15
+
 * Fri Sep 02 2022 Augusto Caringi <acaringi@redhat.com> - 0.16.0-1
 - Rebased to version 0.16.0
 
