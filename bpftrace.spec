@@ -7,6 +7,8 @@ License:        ASL 2.0
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Patch1:         0001-Workaround-OpaquePointers-for-LLVM-15.patch
+# https://github.com/iovisor/bpftrace/pull/2484
+Patch2:         0001-Fix-compile-with-GCC-13.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
