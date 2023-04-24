@@ -1,12 +1,11 @@
 Name:           bpftrace
-Version:        0.16.0
-Release:        3%{?dist}
+Version:        0.17.1
+Release:        1%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        ASL 2.0
 
 URL:            https://github.com/iovisor/bpftrace
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
-Patch1:         0001-Workaround-OpaquePointers-for-LLVM-15.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
@@ -46,7 +45,8 @@ and predecessor tracers such as DTrace and SystemTap
 %build
 %cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
        -DBUILD_TESTING:BOOL=OFF \
-       -DBUILD_SHARED_LIBS:BOOL=OFF
+       -DBUILD_SHARED_LIBS:BOOL=OFF \
+       -DUSE_SYSTEM_BPF_BCC:BOOL=ON
 %cmake_build
 
 
@@ -81,6 +81,9 @@ find %{buildroot}%{_datadir}/%{name}/tools -type f -exec \
 
 
 %changelog
+* Mon Apr 24 2023 Augusto Caringi <acaringi@redhat.com> - 0.17.1-1
+- Rebased to version 0.17.1
+
 * Mon Sep 26 2022 Kenneth Topp <toppk@bllue.org> - 0.16.0-3
 - Enable workaround for non OpaquePointers on LLVM-15
 
