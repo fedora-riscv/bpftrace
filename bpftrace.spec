@@ -25,7 +25,9 @@ BuildRequires:  libbpf-devel
 BuildRequires:  libbpf-static
 BuildRequires:  binutils-devel
 BuildRequires:  cereal-devel
+%if ! 0%{?rhel}
 BuildRequires:  libdwarf-devel
+%endif
 BuildRequires:  rubygem-asciidoctor
 
 
