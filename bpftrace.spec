@@ -1,6 +1,6 @@
 Name:           bpftrace
 Version:        0.19.1
-Release:        1%{?dist}
+Release:        1.rv64%{?dist}
 Summary:        High-level tracing language for Linux eBPF
 License:        Apache-2.0
 
@@ -10,7 +10,7 @@ Patch1:         0001-Workaround-OpaquePointers-for-LLVM-15.patch
 
 # Arches will be included as upstream support is added and dependencies are
 # satisfied in the respective arches
-ExclusiveArch:  x86_64 %{power64} aarch64 s390x
+ExclusiveArch:  x86_64 %{power64} aarch64 s390x riscv64
 
 BuildRequires:  gcc-c++
 BuildRequires:  bison
