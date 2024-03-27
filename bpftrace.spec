@@ -18,8 +18,8 @@ BuildRequires:  flex
 BuildRequires:  cmake
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  zlib-devel
-BuildRequires:  llvm-devel
-BuildRequires:  clang-devel
+BuildRequires:  llvm17-devel
+BuildRequires:  clang17-devel
 BuildRequires:  bcc-devel >= 0.19.0-1
 BuildRequires:  libbpf-devel
 BuildRequires:  libbpf-static
